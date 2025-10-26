@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             GeoquizTheme {
                 val questions = listOf(
-                    // placeholder question; реальные вопросы добавим отдельными коммитами
                     Question("Placeholder question", true)
                 )
                 GeoQuizScreen(questions)
@@ -78,31 +77,32 @@ fun GeoQuizScreen(questions: List<Question>) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = {
-                        // mark answered
-                        if (!answered[currentIndex]) answered[currentIndex] = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    shape = RoundedCornerShape(0.dp)
+
+            if (!answered[currentIndex]) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("True", color = Color.White)
+                    Button(
+                        onClick = { if (!answered[currentIndex]) answered[currentIndex] = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        shape = RoundedCornerShape(0.dp)
+                    ) {
+                        Text("True", color = Color.White)
+                    }
+                    Button(
+                        onClick = { if (!answered[currentIndex]) answered[currentIndex] = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        shape = RoundedCornerShape(0.dp)
+                    ) {
+                        Text("False", color = Color.White)
+                    }
                 }
-                Button(
-                    onClick = {
-                        if (!answered[currentIndex]) answered[currentIndex] = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    shape = RoundedCornerShape(0.dp)
-                ) {
-                    Text("False", color = Color.White)
-                }
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
             }
+
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
