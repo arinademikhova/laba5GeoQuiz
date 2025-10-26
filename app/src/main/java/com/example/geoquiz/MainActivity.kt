@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             GeoquizTheme {
                 val questions = listOf(
-                    Question("Placeholder question", true)
+                    Question("Canberra is the capital of Australia.", true)
                 )
                 GeoQuizScreen(questions)
             }
@@ -128,6 +128,10 @@ fun GeoQuizScreen(questions: List<Question>) {
 @Composable
 fun GeoQuizPreview() {
     GeoquizTheme {
-        GeoQuizScreen(listOf(Question("Placeholder question", true)))
+        GeoQuizScreen(
+            listOf(
+                Question("Canberra is the capital of Australia.", true)
+            )
+        )
     }
 }
