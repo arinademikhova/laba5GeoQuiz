@@ -18,6 +18,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -25,13 +27,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.geoquiz.ui.theme.GeoquizTheme
+import kotlinx.coroutines.launch
 
 data class Question(val text: String, val answer: Boolean)
 
@@ -59,8 +64,11 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeoQuizScreen(questions: List<Question>) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var currentIndex by remember { mutableIntStateOf(0) }
     val answered = remember { mutableStateListOf<Boolean>().apply { repeat(questions.size) { add(false) } } }
+    var correctCount by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -69,7 +77,8 @@ fun GeoQuizScreen(questions: List<Question>) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Blue)
             )
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
@@ -79,10 +88,10 @@ fun GeoQuizScreen(questions: List<Question>) {
             Spacer(modifier = Modifier.height(28.dp))
             Text(
                 text = questions[currentIndex].text,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(20.dp))
-
             if (!answered[currentIndex]) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -90,14 +99,30 @@ fun GeoQuizScreen(questions: List<Question>) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
-                        onClick = { if (!answered[currentIndex]) answered[currentIndex] = true },
+                        onClick = {
+                            if (!answered[currentIndex]) {
+                                answered[currentIndex] = true
+                                if (questions[currentIndex].answer) correctCount++
+                                if (currentIndex == questions.lastIndex) {
+                                    scope.launch { snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}") }
+                                }
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                         shape = RoundedCornerShape(0.dp)
                     ) {
                         Text("True", color = Color.White)
                     }
                     Button(
-                        onClick = { if (!answered[currentIndex]) answered[currentIndex] = true },
+                        onClick = {
+                            if (!answered[currentIndex]) {
+                                answered[currentIndex] = true
+                                if (!questions[currentIndex].answer) correctCount++
+                                if (currentIndex == questions.lastIndex) {
+                                    scope.launch { snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}") }
+                                }
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                         shape = RoundedCornerShape(0.dp)
                     ) {
@@ -107,9 +132,7 @@ fun GeoQuizScreen(questions: List<Question>) {
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
             if (currentIndex < questions.lastIndex) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
