@@ -104,17 +104,20 @@ fun GeoQuizScreen(questions: List<Question>) {
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = { if (currentIndex < questions.lastIndex) currentIndex++ },
-                    enabled = answered[currentIndex],
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    shape = RoundedCornerShape(0.dp)
+
+            if (currentIndex < questions.lastIndex) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text("Next", color = Color.White)
+                    Button(
+                        onClick = { currentIndex++ },
+                        enabled = answered[currentIndex],
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        shape = RoundedCornerShape(0.dp)
+                    ) {
+                        Text("Next", color = Color.White)
+                    }
                 }
             }
         }
