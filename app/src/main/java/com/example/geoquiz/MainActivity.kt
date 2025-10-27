@@ -17,6 +17,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -26,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -69,6 +72,8 @@ fun GeoQuizScreen(questions: List<Question>) {
     var currentIndex by remember { mutableIntStateOf(0) }
     val answered = remember { mutableStateListOf<Boolean>().apply { repeat(questions.size) { add(false) } } }
     var correctCount by remember { mutableIntStateOf(0) }
+    // локальное состояние выбранного варианта (null — ничего не выбрано)
+    var selectedOption by remember { mutableStateOf<Boolean?>(null) }
 
     Scaffold(
         topBar = {
@@ -92,54 +97,86 @@ fun GeoQuizScreen(questions: List<Question>) {
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(20.dp))
+
+            // радиоварианты — показываем только если вопрос ещё не отвечен
             if (!answered[currentIndex]) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (!answered[currentIndex]) {
-                                answered[currentIndex] = true
-                                if (questions[currentIndex].answer) correctCount++
-                                if (currentIndex == questions.lastIndex) {
-                                    scope.launch { snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}") }
+                    // True option
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = selectedOption == true,
+                            onClick = {
+                                if (!answered[currentIndex]) {
+                                    selectedOption = true
+                                    // зафиксировать ответ
+                                    answered[currentIndex] = true
+                                    if (questions[currentIndex].answer) correctCount++
+                                    // если это последний — показать результат
+                                    if (currentIndex == questions.lastIndex) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}")
+                                        }
+                                    }
                                 }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                        shape = RoundedCornerShape(0.dp)
-                    ) {
-                        Text("True", color = Color.White)
+                            },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = Color.Blue,
+                                unselectedColor = Color.Blue.copy(alpha = 0.6f)
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "True", modifier = Modifier.padding(start = 4.dp))
                     }
-                    Button(
-                        onClick = {
-                            if (!answered[currentIndex]) {
-                                answered[currentIndex] = true
-                                if (!questions[currentIndex].answer) correctCount++
-                                if (currentIndex == questions.lastIndex) {
-                                    scope.launch { snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}") }
+
+                    // False option
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = selectedOption == false,
+                            onClick = {
+                                if (!answered[currentIndex]) {
+                                    selectedOption = false
+                                    answered[currentIndex] = true
+                                    if (!questions[currentIndex].answer) correctCount++
+                                    if (currentIndex == questions.lastIndex) {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Результат: $correctCount / ${questions.size}")
+                                        }
+                                    }
                                 }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                        shape = RoundedCornerShape(0.dp)
-                    ) {
-                        Text("False", color = Color.White)
+                            },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = Color.Blue,
+                                unselectedColor = Color.Blue.copy(alpha = 0.6f)
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "False", modifier = Modifier.padding(start = 4.dp))
                     }
                 }
             } else {
+                // очистим локальный selection при переходе на следующий вопрос,
+                // но делаем это только визуально — при отображении следующего вопроса we will reset selectedOption
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Next — видна только если есть следующий вопрос
             if (currentIndex < questions.lastIndex) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
                     Button(
-                        onClick = { currentIndex++ },
+                        onClick = {
+                            // при переходе к следующему вопросу сбрасываем локальный выбор
+                            selectedOption = null
+                            currentIndex++
+                        },
                         enabled = answered[currentIndex],
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                         shape = RoundedCornerShape(0.dp)
